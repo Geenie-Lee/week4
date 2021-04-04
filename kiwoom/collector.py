@@ -7,7 +7,7 @@ print(updates)
 
 for i in updates:
     print(i)
-    
-print("start telegram chat bot")    
 
-bot.sendMessage(chat_id = '57116486', text = "Hi Bot")
+print("start telegram chat bot")
+
+bot.sendMessage(chat_id='57116486', text="Hi Bot")
