@@ -85,8 +85,8 @@ class Trace(QAxWidget):
     def signal_market_status(self):
         # [장시작시간][장운영구분] (0:장시작전, 2:장종료전(20분), 3:장시작, 4,8:장종료(30분), 9:장마감)
         value = self.dynamicCall("SetRealReg(QString, QString, int, QString)", self.screen_number_market, ' ', 215, "0")
+        print(">> [장시작시간][장운영구분] (0:장시작전, 2:장종료전(20분), 3:장시작, 4,8:장종료(30분), 9:장마감)")
         print(">> value: %s" % value)
-        print("")
         self.event_loop_real_data.exec_()
 
     def get_analyzed_stocks(self):
@@ -101,7 +101,7 @@ class Trace(QAxWidget):
                     stock_code = ls[0]
                     stock_name = ls[1]
 
-                    print(">> 종목코드: %s, 종목명: %s" % (stock_code, stock_name))
+                    print(">> 추적대상 종목코드: %s, 종목명: %s" % (stock_code, stock_name))
 
                     self.trace_stocks.append(stock_code)
 
