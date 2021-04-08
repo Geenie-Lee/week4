@@ -7,7 +7,7 @@ class Day:
     def __init__(self):
         print(">> class: " + self.__class__.__name__)
         self.now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-        self.collect("KRW-DAWN", 5)
+        self.collect("KRW-MED", 5)
 
     def collect(self, market, days):
         url = "https://api.upbit.com/v1/candles/days"

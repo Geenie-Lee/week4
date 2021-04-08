@@ -7,9 +7,10 @@ import requests
 class Minute:
     def __init__(self):
         print(">> class: "+self.__class__.__name__)
+        self.cnt = 0
         while True:
-            time.sleep(1)
-            self.collect("KRW-DAWN", "1", 1)
+            self.collect("KRW-MED", "1", 1)
+            time.sleep(5)
 
     def collect(self, market, unit, cnt):
         url = "https://api.upbit.com/v1/candles/minutes/"+unit
@@ -17,10 +18,9 @@ class Minute:
         response = requests.request("GET", url, params=querystring)
         minutes = json.loads(response.text)
 
-        i = 0
+        self.cnt = self.cnt + 1
         for minute in minutes:
-            i = i+1
-            print('>> minute[%s] => %s ' % (i, minute))
+            print('>> %s trade_price = %s ' % (self.cnt, minute['trade_price']))
 
 
 if __name__ == "__main__":

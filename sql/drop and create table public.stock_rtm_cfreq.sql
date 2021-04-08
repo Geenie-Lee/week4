@@ -7,8 +7,11 @@ create table public.stock_rtm_cfreq (
 	price int4 not null default 0,
 	volume int4 not null default 0,
 	freq  int4 not null default 0,
-	iscur varchar(1)
+	iscur varchar(1) not null default 'N',
+	isbuy varchar(1) not null default 'N'
 );
+
+alter table stock_rtm_cfreq add column max_volume int4;
 
 create unique index stock_rtm_cfreq_uk on public.stock_rtm_cfreq using btree (stock_code,price,dt desc);
 

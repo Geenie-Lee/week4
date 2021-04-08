@@ -29,6 +29,13 @@ class Trace(QAxWidget):
         self.current_stock_code = None
         self.today = (datetime.now()).strftime('%Y%m%d')
 
+        # 추적 종목 딕셔너리(종목코드:고저갭가격)
+        self.trace_stocks_dict = {}
+        self.K = 0.5
+
+        # 추적 종목 중 매수된 종목 관리
+        self.trace_buy_stocks_dict = {}
+
         # 종가저장
         self.close_prices = []
 
@@ -99,14 +106,16 @@ class Trace(QAxWidget):
                 if line != "":
                     ls = line.split("\t")
                     stock_code = ls[0]
-                    stock_name = ls[1]
+                    hl_gap_price = int(ls[1])
+                    stock_name = ls[2].strip('\n')
 
-                    print(">> 추적대상 종목코드: %s, 종목명: %s" % (stock_code, stock_name))
+                    self.trace_stocks_dict[stock_code] = hl_gap_price
+                    print(">> 추적대상 종목코드: %s, 종목명: %s, 고저차이가격: %s" % (stock_code, stock_name, hl_gap_price))
 
                     self.trace_stocks.append(stock_code)
 
             # print(">> self.portfolio_stock_dict: %s" % self.portfolio_stock_dict)
-            print("")
+            print(self.trace_stocks_dict)
             f.close()
 
     # 대상 종목(보유,미체결,포트폴리오) 실시간 등록
@@ -205,10 +214,24 @@ class Trace(QAxWidget):
             high_price = abs(int(high_price))
             open_price = abs(int(open_price))
             low_price = abs(int(low_price))
+            hl_gap_price = self.trace_stocks_dict[stock_code]
+
+            # 변동성 돌파 매매의 매수 가격 계산하기
+            calc_buy_price = open_price+(hl_gap_price*self.K)
 
             tm = conclusion_time[:4]
 
+            # 금액 분포 테이블에 저장
             self.insert_freq_info(stock_code, close_price, volume, tm)
+
+            # 변동성 돌파 전략에 따른 가격 돌파 시 매수
+            if calc_buy_price <= close_price and self.trace_buy_stocks_dict[stock_code] != 'Y':
+                print(">> 변동성 돌파에 의해 종목[%s]이 %s 원에 매수되었습니다." % (stock_code, close_price))
+                # 매수되었음을 기록해서 중복 매수 방지
+                self.trace_buy_stocks_dict[stock_code] = 'Y'
+                # 매수된 가격을 테이블의 매수여부에 업데이트해서 수익율 체크
+                self.update_buy_flag(stock_code, close_price)
+
 
             #             print(">> 체결시간: %s" % conclusion_time)
             #             print(">> 현재가: %s" % format(close_price, ","))
@@ -297,6 +320,18 @@ class Trace(QAxWidget):
         else:
             update_cfreq_sql = "update stock_rtm_cfreq set tm = %s, volume = %s, freq = %s, iscur = %s where dt = to_char(current_date,'yyyymmdd') and stock_code = %s and price = %s"
             cur.execute(update_cfreq_sql, (tm, row[0]+volume, row[1]+1, 'Y', stock_code, close_price))
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
+    def update_buy_flag(self, stock_code, close_price):
+        conn_string = "host='localhost' dbname='postgres' user='postgres' password='postgres' port='5432'"
+        conn = psycopg2.connect(conn_string)
+        cur = conn.cursor()
+
+        update_cfreq_sql = "update stock_rtm_cfreq set isbuy = %s where dt = to_char(current_date,'yyyymmdd') and stock_code = %s and price = %s"
+        cur.execute(update_cfreq_sql, ('Y', stock_code, close_price))
 
         conn.commit()
         cur.close()
